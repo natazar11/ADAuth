@@ -1,35 +1,38 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-[ApiController]
-[Route("api/[controller]")]
-public class AuthController : ControllerBase
+namespace ADAuth.Controllers
 {
-    private readonly ADAuthentication _adAuth;
-    private readonly JwtService _jwtService;
-
-    public AuthController(ADAuthentication adAuth, JwtService jwtService)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class AuthController : ControllerBase
     {
-        _adAuth = adAuth;
-        _jwtService = jwtService;
-    }
+        private readonly ADAuthentication _adAuth;
+        private readonly JwtService _jwtService;
 
-    [HttpPost("login")]
-    public IActionResult Login([FromForm] string username, [FromForm] string password)
-    {
-        if(username=="test" && password=="pass")
+        public AuthController(ADAuthentication adAuth, JwtService jwtService)
         {
-            var token = _jwtService.GenerateToken(username);
-
-            return Ok(new { message = "Authentication successful.", token = token });
+            _adAuth = adAuth;
+            _jwtService = jwtService;
         }
 
-        if (_adAuth.Authenticate(username, password))
+        [HttpPost("login")]
+        public IActionResult Login([FromForm] string username, [FromForm] string password)
         {
-            var token = _jwtService.GenerateToken(username);
+            if (username == "test" && password == "pass")
+            {
+                var token = _jwtService.GenerateToken(username);
 
-            return Ok(new { message = "Authentication successful.", token = token });
+                return Ok(new { message = "Authentication successful.", token });
+            }
+
+            if (_adAuth.Authenticate(username, password))
+            {
+                var token = _jwtService.GenerateToken(username);
+
+                return Ok(new { message = "Authentication successful.", token });
+            }
+
+            return Unauthorized(new { message = "Invalid username or password." });
         }
-
-        return Unauthorized(new { message = "Invalid username or password." });
     }
 }
