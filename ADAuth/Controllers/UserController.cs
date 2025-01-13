@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.DirectoryServices;
+using System.DirectoryServices.AccountManagement;
 using System.Reflection;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,9 +11,10 @@ namespace ADAuth.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly string ldapPath = "LDAP://kouzi.lb";
-        private readonly string adminUsername = "MenaMe";
-        private readonly string adminPassword = "MenaP@ssw0rd";
+        private static readonly string ldapPath = "LDAP://kouzi.lb";
+        private static readonly string DomainName = "kouzi.lb";
+        private static readonly string adminUsername = "MenaMe";
+        private static readonly string adminPassword = "MenaP@ssw0rd";
 
 
         //CREATE USER
@@ -120,96 +122,67 @@ namespace ADAuth.Controllers
             return users;
         }
 
-        ////CHANGE PASSWORD
-        //[HttpPost("changepassword")]
-        //public IActionResult ChangePassword([FromBody] PasswordChangeModel passwordChange)
-        //{
-        //    try
-        //    {
-        //        if (ValidateOldPassword(passwordChange.UserName, passwordChange.OldPassword))
-        //        {
-        //            ChangeUserPassword(passwordChange.UserName, passwordChange.OldPassword, passwordChange.NewPassword);
-        //            return Ok("Password changed successfully.");
-        //        }
-        //        else
-        //        {
-        //            return BadRequest("Old password is incorrect.");
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        return BadRequest($"Error changing password: {ex.Message}");
-        //    }
-        //}
+        //CHANGE PASSWORD
+        [HttpPost("changepassword")]
+        public IActionResult ChangePassword([FromBody] PasswordChangeModel passwordChange)
+        {
+            try
+            {
+                if (ValidateUser(passwordChange.UserName, passwordChange.OldPassword))
+                {
+                    bool passwordChanged = ChangeUserPassword(passwordChange.UserName, passwordChange.NewPassword);
+                    if (passwordChanged)
+                    {
+                        return Ok("Password changed successfully.");
+                    }
+                    else
+                    {
+                        return BadRequest("Error changing password.");
+                    }
+                }
+                else
+                {
+                    return BadRequest("Old password is incorrect.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error changing password: {ex.Message}");
+            }
+        }
+
+
+        public static bool ChangeUserPassword(string username, string newPassword)
+        {
+            try
+            {
+                string ldapP = $"{ldapPath}/CN={username},CN=Users,DC=kouzi,DC=lb";
+
+                using (DirectoryEntry userEntry = new DirectoryEntry(ldapP, adminUsername, adminPassword))
+                {
+                    userEntry.Invoke("SetPassword", new object[] { newPassword });
+
+                    userEntry.CommitChanges();
+                    Console.WriteLine("Password changed successfully.");
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error changing password: {ex.Message}, StackTrace: {ex.StackTrace}");
+                return false;
+            }
+        }
 
 
 
-        //private bool ValidateOldPassword(string userName, string oldPassword)
-        //{
-        //    try
-        //    {
-        //        using (var entry = new DirectoryEntry(ldapPath, userName, oldPassword))
-        //        {
-        //            var test = entry.NativeObject;
-        //            return true;
-        //        }
-        //    }
-        //    catch
-        //    {
-        //        return false;
-        //    }
-        //}
-
-
-
-        //private void ChangeUserPassword(string userName, string OldPassword, string newPassword)
-        //{
-        //    try
-        //    {
-        //        using (var entry = new DirectoryEntry(ldapPath, userName, OldPassword))
-        //        {
-        //            var search = new DirectorySearcher(entry)
-        //            {
-        //                Filter = "(SAMAccountName=" + userName + ")"
-        //            };
-        //            var result = search.FindOne();
-
-        //            if (result != null)
-        //            {
-        //                var userEntry = result.GetDirectoryEntry();
-        //                if (userEntry != null)
-        //                {
-        //                    try
-        //                    {
-        //                        userEntry.Invoke("SetPassword", newPassword );
-        //                        userEntry.CommitChanges();
-        //                    }
-        //                    catch (TargetInvocationException tie)
-        //                    {
-        //                        Console.WriteLine($"Error invoking ChangePassword: {tie.InnerException?.Message}");
-        //                        throw new Exception($"Error changing password: {tie.InnerException?.Message}");
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    throw new Exception("User entry not found.");
-        //                }
-        //            }
-        //            else
-        //            {
-        //                throw new Exception("User not found.");
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine($"Error in changing password: {ex.Message}");
-        //        throw new Exception($"Error in changing password: {ex.Message}");
-        //    }
-        //}
-
-
-
+        public static bool ValidateUser(string username, string password)
+        {
+            using (var context = new PrincipalContext(ContextType.Domain, DomainName))
+            {
+                return context.ValidateCredentials(username, password);
+            }
+        }
 
     }
 
@@ -221,10 +194,10 @@ namespace ADAuth.Controllers
         public string UserName { get; set; }
         public string Password { get; set; }
     }
-    //public class PasswordChangeModel
-    //{
-    //    public string UserName { get; set; }
-    //    public string OldPassword { get; set; }
-    //    public string NewPassword { get; set; }
-    //}
+    public class PasswordChangeModel
+    {
+        public string UserName { get; set; }
+        public string OldPassword { get; set; }
+        public string NewPassword { get; set; }
+    }
 }
