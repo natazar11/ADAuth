@@ -184,7 +184,64 @@ namespace ADAuth.Controllers
             }
         }
 
-    }
+
+        //RENEW PASSWORD
+        //[HttpPost("renewpassword")]
+        //public IActionResult RenewPassword([FromBody] PasswordRenewalRequest request)
+        //{
+        //    try
+        //    {
+        //        bool isPasswordRenewed = RenewExpiredPassword(request.Username, request.NewPassword);
+        //        if (isPasswordRenewed)
+        //        {
+        //            return Ok("Password renewed successfully.");
+        //        }
+        //        else
+        //        {
+        //            return BadRequest("Password has not expired or renewal failed.");
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        return StatusCode(500, $"Error renewing password: {ex.Message}");
+        //    }
+        //}
+
+        //private bool RenewExpiredPassword(string username, string newPassword)
+        //{
+        //    try
+        //    {
+        //        string ldapP = $"{ldapPath}/CN={username},CN=Users,DC=kouzi,DC=lb";
+        //        using (DirectoryEntry entry = new DirectoryEntry(ldapP, adminUsername, adminPassword))
+        //        {
+        //            DateTime pwdLastSet = (DateTime)entry.Properties["pwdLastSet"].Value;
+
+        //            int passwordExpiryDays = 90;
+
+        //            DateTime expiryDate = pwdLastSet.AddDays(passwordExpiryDays);
+        //            if (DateTime.Now > expiryDate)
+        //            {
+        //                entry.Invoke("SetPassword", new object[] { newPassword });
+        //                entry.CommitChanges();
+
+        //                Console.WriteLine("Password renewed successfully.");
+        //                return true;
+        //            }
+        //            else
+        //            {
+        //                Console.WriteLine("Password is not expired.");
+        //                return false;
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"Error renewing password: {ex.Message}, StackTrace: {ex.StackTrace}");
+        //        return false;
+        //    }
+        //}
+
+}
 
     //MODELS
     public class UserModel
@@ -198,6 +255,11 @@ namespace ADAuth.Controllers
     {
         public string UserName { get; set; }
         public string OldPassword { get; set; }
+        public string NewPassword { get; set; }
+    }
+    public class PasswordRenewalRequest
+    {
+        public string Username { get; set; }
         public string NewPassword { get; set; }
     }
 }

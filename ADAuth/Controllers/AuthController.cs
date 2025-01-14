@@ -35,4 +35,9 @@ namespace ADAuth.Controllers
             return Unauthorized(new { message = "Invalid username or password." });
         }
     }
+    public class User
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
 }
