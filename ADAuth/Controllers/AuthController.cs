@@ -16,18 +16,18 @@ namespace ADAuth.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromForm] string username, [FromForm] string password)
+        public IActionResult Login([FromForm]User user)
         {
-            if (username == "test" && password == "pass")
+            if (user.username == "test" && user.password == "pass")
             {
-                var token = _jwtService.GenerateToken(username);
+                var token = _jwtService.GenerateToken(user.username);
 
                 return Ok(new { message = "Authentication successful.", token });
             }
 
-            if (_adAuth.Authenticate(username, password))
+            if (_adAuth.Authenticate(user.username, user.password))
             {
-                var token = _jwtService.GenerateToken(username);
+                var token = _jwtService.GenerateToken(user.username);
 
                 return Ok(new { message = "Authentication successful.", token });
             }
@@ -37,7 +37,7 @@ namespace ADAuth.Controllers
     }
     public class User
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public string username { get; set; }
+        public string password { get; set; }
     }
 }
