@@ -4,10 +4,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowLocalhost",
-        policy => policy.WithOrigins("http://localhost:3000")
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
+
+    options.AddDefaultPolicy(builder =>
+    builder.SetIsOriginAllowed(_ => true)
+           .WithOrigins("http://localhost:3000", "http://localhost:3001")
+           .AllowAnyHeader()
+           .AllowAnyMethod()
+           .AllowCredentials());
+
+    //options.AddPolicy("AllowAnyOrigin", builder =>
+    //{
+    //    builder
+    //        .WithOrigins("http://localhost:3000", "http://localhost:3001")
+    //        .AllowAnyMethod()
+    //        .AllowAnyHeader()
+    //        .AllowCredentials();
+    //});
 });
 
 builder.Services.AddSingleton<ADAuthentication>();
@@ -38,7 +50,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.UseCors("AllowLocalhost");
+app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {
@@ -46,7 +58,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 

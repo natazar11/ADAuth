@@ -16,7 +16,7 @@ namespace ADAuth.Controllers
         }
 
         [HttpPost("login")]
-        public IActionResult Login([FromForm]User user)
+        public IActionResult Login([FromBody]User user)
         {
             if (user.username == "test" && user.password == "pass")
             {
@@ -26,7 +26,7 @@ namespace ADAuth.Controllers
             }
 
             if (_adAuth.Authenticate(user.username, user.password))
-            {
+            { 
                 var token = _jwtService.GenerateToken(user.username);
 
                 return Ok(new { message = "Authentication successful.", token });
